@@ -1,57 +1,60 @@
-class Solution {
+import java.util.*;
+
+public class Solution {
+    private static final int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
     public int largestIsland(int[][] grid) {
-        Map<Integer, Integer> regionsArea = new HashMap<>();
-        regionsArea.put(0,0);
-        
         int n = grid.length;
-        int region = 2;
-        for(int i=0;i<n;i++){
-            for(int j=0;j<n;j++){
-                if(grid[i][j]==1){
-                    int area = floodFill(grid, i, j, region);
-                    regionsArea.put(region, area);
-                    region++;
+        List<Integer> key = new ArrayList<>();
+        int id = 2;
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (grid[i][j] == 1) {
+                    int size = dfs(grid, i, j, id);
+                    key.add(size);
+                    id++;
                 }
             }
         }
-        
-        int max = regionsArea.getOrDefault(2,0);
-        for(int r=0;r<n;r++){
-            for(int c=0;c<n;c++){
-                if(grid[r][c]==0){
-                    Set<Integer> neighbors = new HashSet<>();
-                    neighbors.add(r>0?grid[r-1][c]:0);
-                    neighbors.add(c>0?grid[r][c-1]:0);
-                    neighbors.add(r<n-1?grid[r+1][c]:0);
-                    neighbors.add(c<n-1?grid[r][c+1]:0);
-                    int area = 1;
-                    for(int neighbor: neighbors){
-                        area+=regionsArea.get(neighbor);
+
+        if (key.isEmpty()) return 1;
+
+        int max = 0;
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (grid[i][j] == 0) {
+                    Set<Integer> seen = new HashSet<>();
+                    int sum = 1;
+                    for (int[] dir : dirs) {
+                        int ni = i + dir[0];
+                        int nj = j + dir[1];
+                        if (ni >= 0 && ni < n && nj >= 0 && nj < n && grid[ni][nj] >= 2) {
+                            int islandId = grid[ni][nj];
+                            if (!seen.contains(islandId)) {
+                                sum += key.get(islandId - 2);
+                                seen.add(islandId);
+                            }
+                        }
                     }
-                    if(area>max){
-                        max = area;
-                    }
+                    max = Math.max(max, sum);
                 }
             }
         }
-        
-        return max;
+
+        return max == 0 ? n * n : max;
     }
-    
-    public int floodFill(int[][] grid, int r, int c, int region) {
-        int n = grid.length;
-        if(r<0||r>=n||c<0||c>=n||grid[r][c]!=1){
+
+    private int dfs(int[][] grid, int i, int j, int id) {
+        if (i < 0 || i >= grid.length || j < 0 || j >= grid[0].length || grid[i][j] != 1) {
             return 0;
         }
-        
-        grid[r][c] = region;
-        
-        int sum = 1;
-        sum+=floodFill(grid, r, c+1, region);
-        sum+=floodFill(grid, r+1, c, region);
-        sum+=floodFill(grid, r, c-1, region);
-        sum+=floodFill(grid, r-1, c, region);
-        
-        return sum;
+        grid[i][j] = id;
+        int count = 1;
+        for (int[] dir : dirs) {
+            count += dfs(grid, i + dir[0], j + dir[1], id);
+        }
+        return count;
     }
 }
