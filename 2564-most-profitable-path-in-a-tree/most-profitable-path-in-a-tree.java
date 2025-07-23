@@ -1,49 +1,77 @@
-class Solution {
-    public int mostProfitablePath(int[][] edges, int bob, int[] amount) {
-        ArrayList<Integer>[] graph = new ArrayList[amount.length];
-        for (int i = 0; i < graph.length; i++) graph[i] = new ArrayList<>();
-        for (int[] edge : edges) {
-            graph[edge[0]].add(edge[1]);
-            graph[edge[1]].add(edge[0]);
+class Solution
+{
+    public int mostProfitablePath(int[][] edges, int bob, int[] amount)
+    {
+        int n = amount.length;
+        List<Integer>[] tree = new ArrayList[n];
+        for (int i = 0; i < n; i++) tree[i] = new ArrayList<>();
+
+        // Step 1: Build the adjacency list representation of the tree
+        for (int[] e : edges)
+        {
+            tree[e[0]].add(e[1]);
+            tree[e[1]].add(e[0]);
         }
 
-        int[] bobPath = new int[amount.length];
-        Arrays.fill(bobPath, -1);
-        ArrayList<Integer> path = new ArrayList<>();
-        fillBobPath(bob, -1, path, graph);
-        
-        for (int i = 0; i < path.size(); i++) {
-            bobPath[path.get(i)] = i;
-        }
+        int[] bobTime = new int[n];
+        Arrays.fill(bobTime, -1);
 
-        return getAliceMaxScore(0, -1, 0, bobPath, graph, 0, amount);
+        // Step 2: Track Bob’s path and record when he reaches each node
+        findBobPath(bob, 0, tree, bobTime, 0);
+
+        // Step 3: Use DFS for Alice to find the most profitable path
+        return dfs(0, -1, tree, amount, 0, bobTime);
     }
 
-    private boolean fillBobPath(int node, int parentNode, ArrayList<Integer> path, ArrayList<Integer>[] graph) {
+    private boolean findBobPath(int node, int time, List<Integer>[] tree, int[] bobTime, int bob)
+    {
+        bobTime[node] = time;
         if (node == 0) return true;
-        for (int neighborNode : graph[node]) {
-            if (neighborNode != parentNode) {
-                path.add(node);
-                if (fillBobPath(neighborNode, node, path, graph)) return true;
-                path.remove(path.size() - 1);
+
+        for (int neighbor : tree[node])
+        {
+            if (bobTime[neighbor] == -1 && findBobPath(neighbor, time + 1, tree, bobTime, bob))
+            {
+                return true;
             }
         }
+        bobTime[node] = -1;
         return false;
     }
 
-    private int getAliceMaxScore(int node, int parentNode, int currScore, int[] bobPath, ArrayList<Integer>[] graph, int timestamp, int[] amount) {
-        if (bobPath[node] == -1 || bobPath[node] > timestamp) {
-            currScore += amount[node];
-        } else if (bobPath[node] == timestamp) {
-            currScore += amount[node] / 2;
-        }
-        if (graph[node].size() == 1 && node != 0) return currScore;
-        int maxScore = Integer.MIN_VALUE;
-        for (int neighborNode : graph[node]) {
-            if (neighborNode != parentNode) {
-                maxScore = Math.max(maxScore, getAliceMaxScore(neighborNode, node, currScore, bobPath, graph, timestamp + 1, amount));
+    private int dfs(int node, int parent, List<Integer>[] tree, int[] amount, int time, int[] bobTime)
+    {
+        int income = amount[node];
+
+        // Step 4: Adjust Alice’s income based on Bob’s arrival time
+        if (bobTime[node] != -1)
+        {
+            if (bobTime[node] > time)
+            {
+            }
+            else if (bobTime[node] == time)
+            {
+                income /= 2;
+            }
+            else
+            {
+                income = 0;
             }
         }
-        return maxScore;
+
+        int maxProfit = Integer.MIN_VALUE;
+        boolean isLeaf = true;
+
+        for (int neighbor : tree[node])
+        {
+            if (neighbor != parent)
+            {
+                isLeaf = false;
+                maxProfit = Math.max(maxProfit, dfs(neighbor, node, tree, amount, time + 1, bobTime));
+            }
+        }
+
+        // Step 5: If leaf node, return income, else return maxProfit + income
+        return income + (isLeaf ? 0 : maxProfit);
     }
 }
