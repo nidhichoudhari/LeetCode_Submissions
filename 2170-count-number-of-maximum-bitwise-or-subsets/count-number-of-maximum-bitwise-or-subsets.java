@@ -1,23 +1,43 @@
 class Solution {
-    public int countMaxOrSubsets(int[] nums) {
-           int maxOR = 0;
-        for (int num : nums) {
-            maxOR |= num;
+
+    private int count = 0;
+    private int[] nums;
+    private int[] suffixOr;
+
+    private void backtrack(int m, int start, int currentOr) {
+        if (currentOr == m) {
+            count++;
+            // Continue searching for other subsets
         }
-        
-        return backtrack(nums, maxOR, 0, 0);
+
+        for (int i = start; i < nums.length; i++) {
+            int newOr = currentOr | nums[i];
+            // Prune if even adding all remaining elements can't reach m
+            if ((newOr | suffixOr[i]) < m) {
+                continue;
+            }
+            backtrack(m, i + 1, newOr);
+        }
     }
 
-    private int backtrack(int[] nums, int maxOR, int index, int currentOR) {
-        if (index == nums.length) {
-            return currentOR == maxOR ? 1 : 0;
+    public int countMaxOrSubsets(int[] nums) {
+        this.nums = nums;
+        int n = nums.length;
+
+        int maxi = 0;
+        for (int num : nums) {
+            maxi |= num;
         }
-        
-        if (currentOR == maxOR) {
-            return 1 << (nums.length - index);
+
+        // Precompute suffix OR array
+        suffixOr = new int[n];
+        suffixOr[n - 1] = nums[n - 1];
+        for (int i = n - 2; i >= 0; i--) {
+            suffixOr[i] = suffixOr[i + 1] | nums[i];
         }
-        
-        return backtrack(nums, maxOR, index + 1, currentOR | nums[index]) +
-               backtrack(nums, maxOR, index + 1, currentOR);
+
+        count = 0;
+        backtrack(maxi, 0, 0);
+        return count;
     }
 }
