@@ -1,6 +1,6 @@
 class Solution {
     public long coloredCells(int n) {
-        long res = (long)Math.pow(n-1,2)+(long)Math.pow(n,2);
-        return res;
+        if(n == 1) return 1;
+        return 2L * n * (n-1) + 1;  // L -> To prevent overflow
     }
 }
