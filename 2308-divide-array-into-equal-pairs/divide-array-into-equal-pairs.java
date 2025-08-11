@@ -1,16 +1,20 @@
+//solution base on understnding 
 class Solution {
     public boolean divideArray(int[] nums) {
-        Map<Integer, Integer> counter = new HashMap<>();
-        for (int num : nums) {
-            counter.put(num, counter.getOrDefault(num, 0) + 1);
+        int xor = 0;
+        for (int e : nums) {
+            xor ^= e;
         }
-        
-        for (int count : counter.values()) {
-            if (count % 2 != 0) {
-                return false;
-            }
+        if (xor != 0) return false;
+
+        //We can directly do this 
+        int[] freq = new int[501]; 
+        for (int e : nums) {
+            freq[e]++;
         }
-        
+        for (int count : freq) {
+            if (count % 2 != 0) return false;
+        }
         return true;
     }
 }
